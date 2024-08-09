@@ -1,11 +1,12 @@
 "use strict";
 
-//const Status = {
-//    CannotStart: "cannotStart",
-//    NotStarted: "notStarted",
-//    InProgress: "inProgress",
-//    Completed: "completed"
-//}
+const Status = {
+    CannotStart: "cannotStart",
+    NotStarted: "notStarted",
+    InProgress: "inProgress",
+    Completed: "completed"
+}
+
 class ApplicationData {
     constructor() {
         this.isAcknowledged = null;
@@ -33,167 +34,94 @@ class ApplicationData {
     }
 }
 
-class Step {
-    constructor(name) {
-        this.name = name;
-    }
-
-    get status() {
-        throw new Error("property 'status' must be implemented in derived classes.");
-    }
-
-    get subSteps() {
-        throw new Error("property 'subSteps' must be implemented in derived classes.");
-    }
-}
-
 class SubStep {
-    constructor(name) {
+    constructor(name, status = Status.NotStarted) {
         this.name = name;
-    }
-
-    get status() {
-        throw new Error("property 'status' must be implemented in derived classes.");
+        this.status = status;
+        this.hidden = false;
     }
 }
 
-class AcknowledgementsSubStep extends SubStep {
-    constructor() {
-        super("Acknowledgements")
-    }
-}
+class Step {
+    constructor(name, status = Status.NotStarted) {
+        this.name = name;
+        this.status = status;
 
-class PersonalDetailsSubStep extends SubStep {
-    constructor() {
-        super("Personal Details")
-    }
-}
+        this._subSteps = [];
 
-class LegalResidencySubStep extends SubStep {
-    constructor() {
-        super("Legal residency status")
-    }
-}
+        console.log("Step being created:", name);
 
-class AddressSubStep extends SubStep {
-    constructor() {
-        super("Address")
-    }
-}
+        if (name == "Identification information") {
+            this._subSteps = [
+                new SubStep("Acknowledgements"),
+                new SubStep("Personal details"),
+                new SubStep("Legal residency status"),
+                new SubStep("Social Security Number"),
+                new SubStep("Address"),
+                new SubStep("Photo ID"),
+                new SubStep("Contact information"),
+            ];
 
-class PhotoIdSubStep extends SubStep {
-    constructor() {
-        super("Photo ID")
-    }
-}
+            this._subSteps[3].hidden = true;
+        }
 
-class ContactInformationSubStep extends SubStep {
-    constructor() {
-        super("Contact information")
-    }
-}
-
-class IdentificationInformationStep extends Step {
-    constructor() {
-        super("Identification  information");
-        this.acknowledgementsSubStep = new AcknowledgementsSubStep();
-        this.personalDetailsSubStep = new PersonalDetailsSubStep();
-        this.legalResidencySubStep = new LegalResidencySubStep();
-        this.addressSubStep = new AddressSubStep();
-        this.photoIdSubStep = new PhotoIdSubStep();
-        this.contactInformationSubStep = new ContactInformationSubStep();
-
-        this.currentSubStep = this.acknowledgementsSubStep;
+        else if (name == "Employment information") {
+            this._subSteps = [
+                new SubStep("Employer information"),
+                new SubStep("Employment information details"),
+                new SubStep("Income")
+            ];
+        }
+        else if (name == "Terms and conditions") {
+            this._subSteps = [
+                new SubStep("Agreement 1"),
+                new SubStep("Agreement 2")
+            ];
+        }
+        else if (name == "Review and submit") {
+            this._subSteps = [
+                new SubStep("Review and submit your NextLevel IRA application")
+            ];
+        }
     }
 
     get subSteps() {
-        return [this.acknowledgementsSubStep, this.personalDetailsSubStep, this.legalResidencySubStep, this.addressSubStep, this.photoIdSubStep, this.contactInformationSubStep];
+        console.log("Step", this.name, "has", this._subSteps.length, "sub-steps.");
+        return this._subSteps;
     }
+
 }
 
-class EmployerInformationSubStep extends SubStep {
-    constructor() {
-        super("Employer information");
-    }
-}
-class EmploymentInformationSubStep extends SubStep {
-    constructor() {
-        super("Employment information");
-    }
-}
-
-class IncomeSubStep extends SubStep {
-    constructor() {
-        super("Income");
-    }
-}
-
-class EmploymentInformationStep extends Step {
-    constructor() {
-        super("Employment information");
-
-        this.employerinformationSubStep = new EmployerInformationSubStep();
-        this.employmentInformationSubStep = new EmploymentInformationSubStep();
-        this.incomeSubStep = new IncomeSubStep();
-    }
-
-    get subSteps() {
-        return [this.employerinformationSubStep, this.employmentInformationSubStep, this.incomeSubStep];
-    }
-}
-
-class Agreement1SubStep extends SubStep {
-    constructor() {
-        super("Agreement 1");
-    }
-}
-class Agreement2SubStep extends SubStep {
-    constructor() {
-        super("Agreement 2");
-    }
-}
-
-class TermsAndConditionsStep extends Step {
-    constructor() {
-        super("Terms and conditions")
-
-        this.agreement1SubStep = new Agreement1SubStep();
-        this.agreement2SubStep = new Agreement2SubStep();
-    }
-
-    get subSteps() {
-        return [this.agreement1SubStep, this.agreement1SubStep];
-    }
-}
-class ReviewAndSubmitStep extends Step {
-    constructor() {
-        super("Review and submit")
-    }
-
-    get subSteps() {
-        return [];
-    }
-}
 
 class NextLevelIraApplication {
     constructor() {
         this.data = new ApplicationData();
 
-        this.identificationInformationStep = new IdentificationInformationStep();
-        this.employmentInformationStep = new EmploymentInformationStep();
-        this.termsAndConditionsStep = new TermsAndConditionsStep();
-        this.reviewAndSubmitStep = new ReviewAndSubmitStep();
-
-        this.currentStep = this.identificationInformationStep;
+        this._steps = [
+            new Step("Identification information"),
+            new Step("Employment information"),
+            new Step("Terms and conditions"),
+            new Step("Review and submit")
+        ];
     }
 
     get steps() {
-        return [this.identificationInformationStep, this.employmentInformationStep, this.termsAndConditionsStep, this.reviewAndSubmitStep];
+        return this._steps;
     }
 
-    save() {
-        // serialize, stored in Prospect.NextLevelIraApplicationJson
-        // update prospect
+    get completedSteps() {
+        return this._steps.filter(x => x.status == Status.Completed).length;
+    }
+
+    get totalSteps() {
+        return this._steps.length;
+    }
+    get currentStep() {
+        return this.steps.find(x => x.status == Status.InProgress);
+    }
+
+    moveToNextStep() {
+        console.log("moving to next step");
     }
 }
 

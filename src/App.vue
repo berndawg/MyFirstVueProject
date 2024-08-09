@@ -1,20 +1,21 @@
 <template>
     <main>
         <div v-if="mounted">
+            <div>{{ app.completedSteps }} of {{ app.totalSteps }} completed</div>
             <div v-for="step in app.steps">
                 <div>
                     <span style="font-size:x-large">{{ step.name }}</span>
-                    <span v-if="step == app.currentStep">  (Current Step)</span>
-
+                    <span style="color:red"> {{ step.status }}</span>
                     <div v-for="subStep in step.subSteps">
                         <span style="font-size:medium">{{ subStep.name }}</span>
+                        <span style="color:blue"> {{ subStep.status }}</span>
                     </div>
+
                 </div>
             </div>
             <div>
-                <span @click="back"> [Back]</span>
-                <span>Current step: {{app.currentStep.name}}</span>
-                <span @click="next"> [Next]</span>
+                <span @click="back"> [Back] </span>
+                <span @click="next"> [Next] </span>
             </div>
         </div>
     </main>
@@ -34,10 +35,6 @@
 
         mounted: function () {
             this.app = new NextLevelIraApplication();
-
-            var s = JSON.stringify(this.app);
-
-            console.log(s);
 
             this.mounted = true;
         },
