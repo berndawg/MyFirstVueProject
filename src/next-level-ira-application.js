@@ -37,7 +37,7 @@ class ApplicationData {
 class NextLevelIraApplication {
     constructor() {
         this.data = new ApplicationData();
-        this.rows = [
+        this._rows = [
             { id: 1, parentId: null, type: "step", text: "Identification information", status: Status.NotStarted },
             { id: 2, parentId: 1, type: "substep", text: "Acknowledgements", status: Status.NotStarted },
             { id: 3, parentId: 1, type: "substep", text: "Personal details", status: Status.NotStarted },
@@ -56,29 +56,58 @@ class NextLevelIraApplication {
             { id: 16, parentId: null, type: "step", text: "Review and submit", status: Status.CannotStart },
             { id: 17, parentId: 16, type: "substep", text: "Review and submit your NextLevel IRA application", status: Status.NotStarted },
         ];
-
-        this.setCurrentSubStep(2);
     }
 
-    get steps() {
-        return this.rows.filter(x => x.type == 'step');
+    getSteps() {
+        return this._rows.filter(x => x.type == 'step');
     }
 
-    getSubSteps(parentId) {
-        return this.rows.filter(x => x.parentId == parentId);
+    getSubSteps(id) {
+        return this._rows.filter(x => x.parentId == id);
     }
 
-    setCurrentSubStep(id) {
-        var rows = this.rows.filter(x => x.id == id);
-        if (rows.length > 0) {
-            var currentSubStep = rows[0];
-            currentSubStep.status = Status.InProgress;
-            this._currentSubStep = currentSubStep;
-        }
+    getParent(id) {
+        return this._rows[id - 1];
+    }
+
+    getSubStep(id) {
+        return this._rows[id - 1];
     }
 
     get currentSubStep() {
         return this._currentSubStep;
+    }
+
+    subStepClicked(id) {
+        var substep = this.getSubStep(id);
+        if (substep.Status == Status.CannotStart) return;
+
+        var parent = this.getParent(substep.parentId);
+        if (parent.status == Status.CannotStart) return;
+
+        parent.status = Status.InProgress;
+
+        if (substep.status != Status.Completed) {
+            substep.status = Status.InProgress;
+        }
+        this._currentSubStep = substep;
+
+        this.updateStatuses();
+    }
+
+    updateStatuses() {
+        var steps = this.getSteps();
+        for (var i = 0; i < steps.length; i++) {
+            var step = steps[i];
+            if (this.allSubStepsComplete(step.id)) {
+                step.status = Status.Completed;
+            }
+        }
+    }
+
+    allSubStepsComplete(id) {
+        var substeps = this.getSubSteps(id);
+        return substeps.map(x => x.Status == Status.Completed).length == substeps.length;
     }
 }
 

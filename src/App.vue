@@ -1,16 +1,16 @@
 <template>
     <main>
         <div v-if="mounted">
-            <ol v-for="step in app.steps">
+            <ol v-for="step in app.getSteps()">
                 <li>
                     {{ step.text }} {{ step.status }}
 
                     <ul v-for="substep in app.getSubSteps(step.id)">
-                        <li> {{ substep.text }}  {{ substep.status }} </li>
+                        <li @click="app.subStepClicked(substep.id)"> {{ substep.text }}  {{ substep.status }} </li>
                     </ul>
                 </li>
             </ol>
-            <div>You are currently working on: {{ app.currentSubStep }}</div>
+            <div>You are currently working on: {{ app.currentSubStep?.text }}</div>
         </div>
     </main>
 </template>
@@ -22,6 +22,7 @@
 
         data: function () {
             return {
+                id: null,
                 app: null,
                 mounted: false,
             };
@@ -33,14 +34,6 @@
             this.mounted = true;
         },
 
-        methods: {
-            back: function () {
-                console.log('Back clicked');
-            },
-            next: function () {
-                console.log('Next clicked');
-            }
-        }
     };
 
 </script>
