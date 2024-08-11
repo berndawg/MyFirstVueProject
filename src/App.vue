@@ -30,7 +30,6 @@
 
         mounted: function () {
             this.app = new NextLevelIraApplication();
-
             this.mounted = true;
         },
 

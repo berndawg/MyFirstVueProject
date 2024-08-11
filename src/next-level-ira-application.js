@@ -103,11 +103,15 @@ class NextLevelIraApplication {
                 step.status = Status.Completed;
             }
         }
+
+        var json = JSON.stringify(this);
+        console.log(json);
+
     }
 
     allSubStepsComplete(id) {
         var substeps = this.getSubSteps(id);
-        return substeps.map(x => x.Status == Status.Completed).length == substeps.length;
+        return substeps.filter(x => x.Status == Status.Completed).length == substeps.length;
     }
 }
 
