@@ -145,6 +145,7 @@
                     case 'instructions':
                         if (!step.canBeStarted) {
                             console.log('Step cannot be started', step);
+                            return;
                         }
                         console.log('Step started', step);
                         step.status = Status.InProgress;
@@ -162,13 +163,26 @@
                 this.setView('instructions');
             },
 
+            save() {
+                var obj = [
+                    this.steps,
+                    this.applicationData
+                ];
+
+                var json = JSON.stringify(obj);
+
+                console.log(json);
+            },
+
             saveAndContinue() {
                 var step = this.stepWizard.currentStep;
 
                 if (step.canBeCompleted) {
                     step.status = Status.Completed;
                 }
-                // serialize and save
+
+                this.save();
+
                 if (this.stepWizard.allStepsCompleted) {
                     this.setView('summary');
                 } else {
