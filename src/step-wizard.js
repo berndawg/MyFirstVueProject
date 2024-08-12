@@ -35,6 +35,14 @@ class StepWizard {
         this.CurrentStep = null;
     }
 
+    get completedStepCount() {
+        return this.Steps.filter(x=>x.status == Status.Completed).length;
+    }
+
+    get totalStepCount() {
+        return this.Steps.length;
+    }
+
     getGroups() {
         const results = this.Steps.map(x => x.group);
         const uniqueArray = [...new Set(results)];

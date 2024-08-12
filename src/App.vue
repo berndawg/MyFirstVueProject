@@ -1,7 +1,7 @@
 <template>
     <main>
         <div v-if="mounted">
-
+            <div>You have completed {{ stepWizard.completedStepCount }} of {{ stepWizard.totalStepCount }} steps</div>
             <div v-if="view == 'instructions'">
                 <h1>Instruction Mode</h1>
                 <ol>
