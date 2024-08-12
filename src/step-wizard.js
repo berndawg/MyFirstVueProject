@@ -7,41 +7,61 @@ const StepStatus = {
     Completed: "completed"
 }
 
+class Step {
+    static _id = 0;
 
-class StepDetail {
-    constructor(id, parentId, type, text, status) {
-        this.id = id;
-        this.parentId = parentId;
-        this.type = type;
+    constructor(group, text) {
+        this.group = group;
         this.text = text;
-        this.status = status;
+        this.status = StepStatus.NotStarted;
+        this.id = Step._id;
+
+        Step._id++;
     }
 }
 
 class StepWizard {
     constructor(stepDetails) {
-        this.StepDetails = stepDetails;
+        this.Steps = stepDetails;
+        this._currentStepId = 0;
     }
 
-    getSteps() {
-        return this.StepDetails.filter(x => x.type == 'step');
+    get currentStepId() {
+        return this._currentStepId;
     }
 
-    getSubSteps(id) {
-        return this.StepDetails.filter(x => x.parentId == id);
+    set currentStepId(id) {
+        this._currentStepId = id;
+    }
+
+    getGroups() {
+        const results = this.Steps.map(x => x.group);
+        const uniqueArray = [...new Set(results)];
+        return uniqueArray;
+    }
+
+    getGroupSteps(group) {
+        return this.Steps.filter(x => x.group == group);
     }
 
     getStep(id) {
-        return this.StepDetails[id - 1];
+        return this.Steps[id];
     }
 
-    getParentStep(id) {
-        var step = this.getStep(id);
-        var parent = this.getStep(step.parentId);
-        return parent;
+    getGroupStatus(group) {
+        var groups = this.getGroupSteps(group)
+        if (groups.some(x => x.status == StepStatus.InProgress)) return StepStatus.InProgress;
+        if (groups.every(x => x.status == StepStatus.Completed)) return StepStatus.Completed;
+        return StepStatus.NotStarted;
     }
 
-    
+    isLastStep(id) {
+        return id == this.Steps.length;
+    }
+
+    nextStep() {
+        this.currentStepId = this.currentStepId + 1;
+    }
 }
 
-export { StepStatus, StepDetail, StepWizard }
+export { StepStatus, Step, StepWizard }
