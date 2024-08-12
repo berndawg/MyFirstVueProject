@@ -15,23 +15,22 @@ class Step {
         this.text = text;
         this.status = StepStatus.NotStarted;
         this.id = Step._id;
-
         Step._id++;
+    }
+
+    // can be overridden
+    get canBeStarted() {
+        if (this.status == StepStatus.CannotStart) return false;
+        // todo: if previous steps haven't been completed, can't start
+        return true;
     }
 }
 
 class StepWizard {
-    constructor(stepDetails) {
+    constructor(applicationData, stepDetails) {
+        this.applicationData = applicationData;
         this.Steps = stepDetails;
-        this._currentStepId = 0;
-    }
-
-    get currentStepId() {
-        return this._currentStepId;
-    }
-
-    set currentStepId(id) {
-        this._currentStepId = id;
+        this.CurrentStep = null;
     }
 
     getGroups() {
@@ -55,12 +54,31 @@ class StepWizard {
         return StepStatus.NotStarted;
     }
 
-    isLastStep(id) {
-        return id == this.Steps.length;
+    isFirstStep(id) {
+        return id == 0;
     }
 
-    nextStep() {
-        this.currentStepId = this.currentStepId + 1;
+    isLastStep(id) {
+        return id == this.Steps.lastIndexOf();
+    }
+
+    allStepsCompleted() {
+        return this.Steps.filter(x=>x.status == StepStatus.Completed).length == this.Steps.length;
+    }
+
+    completeStep(id) {
+        var step = this.getStep(id);
+        
+        if (step.status != StepStatus.InProgress) throw new Error('Cannot complete step, id');
+        step.status = StepStatus.Completed;
+    }
+
+    startStep(id) {
+        var step = this.getStep(id);
+        
+        if (step.status == StepStatus.CannotStart) throw new Error('Cannot start step, id');
+
+        this.currentStepId = id;
     }
 }
 
