@@ -5,7 +5,7 @@
             <div v-if="view == 'instructions'">
                 <h1>Instruction Mode</h1>
                 <ol>
-                    <li v-for="group in stepWizard.getGroups()">
+                    <li v-for="group in groups">
                         {{ group }} {{ stepWizard.getGroupStatus(group) }}
                         <ul v-for="step in stepWizard.getGroupSteps(group)">
                             <li @click="stepClicked(step)"> {{ step.text }}  {{ step.status }} </li>
@@ -17,7 +17,7 @@
             <div v-else-if="view == 'summary'">
                 <h1>Summary Mode</h1>
                 <ol>
-                    <li v-for="group in stepWizard.getGroups()">
+                    <li v-for="group in groups">
                         {{ group }}
                         <ul v-for="step in stepWizard.getGroupSteps(group)">
                             <li @click="stepClicked(step)"> {{ step.text }}  {{ step.status }} </li>
@@ -54,8 +54,7 @@
                 </div>
 
                 <div v-else>
-                    <h1>Step not implemented</h1>
-                    {{ stepWizard.currentStep }}
+                    Step {{ stepWizard.currentStep.id }} not implemented
                 </div>
                 <input type="button" value="Save and continue" @click="saveAndContinue()" />
             </div>
@@ -71,7 +70,6 @@
         data: function () {
             return {
                 applicationData: null,
-                steps: null,
                 stepWizard: null,
                 view: null,
                 mounted: false,
@@ -80,9 +78,15 @@
 
         mounted: function () {
             this.applicationData = this.getApplicationData();
-            this.stepWizard = new StepWizard(this.getApplicationData(), this.getSteps());
+            this.stepWizard = new StepWizard(this.getSteps());
             this.setView("instructions");
             this.mounted = true;
+        },
+
+        computed: {
+            groups: function () {
+                return this.stepWizard.getGroups();
+            }
         },
 
         methods: {
@@ -163,10 +167,16 @@
                 this.setView('instructions');
             },
 
+            loadFromJson(json) {
+                var obj = JSON.parse(json);
+                this.view = obj.view;
+                this.stepWizard = obj.stepWizard;
+            },
+
             save() {
                 var obj = [
-                    this.steps,
-                    this.applicationData
+                    this.view,
+                    this.stepWizard
                 ];
 
                 var json = JSON.stringify(obj);
@@ -177,9 +187,7 @@
             saveAndContinue() {
                 var step = this.stepWizard.currentStep;
 
-                if (step.canBeCompleted) {
-                    step.status = Status.Completed;
-                }
+                this.stepWizard.completeStep(step);
 
                 this.save();
 
