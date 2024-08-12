@@ -3,6 +3,7 @@
         <div v-if="mounted">
 
             <div v-if="view == 'instructions'">
+                <h1>Instruction Mode</h1>
                 <ol>
                     <li v-for="group in stepWizard.getGroups()">
                         {{ group }} {{ stepWizard.getGroupStatus(group) }}
@@ -14,6 +15,7 @@
             </div>
 
             <div v-else-if="view == 'summary'">
+                <h1>Summary Mode</h1>
                 <ol>
                     <li v-for="group in stepWizard.getGroups()">
                         {{ group }}
@@ -25,6 +27,8 @@
             </div>
 
             <div v-else-if="view == 'edit'">
+                <h1>Edit Mode</h1>
+
                 <input type="button" value="Back" @click="goBack()" />
 
                 <div v-if="stepWizard.currentStep.id == 0">
@@ -50,7 +54,7 @@
                 </div>
 
                 <div v-else>
-                    <h1>DETAILS</h1>
+                    <h1>Step not implemented</h1>
                     {{ stepWizard.currentStep }}
                 </div>
                 <input type="button" value="Save and continue" @click="saveAndContinue()" />
@@ -60,7 +64,7 @@
 </template>
 
 <script>
-    import { StepStatus, Step, StepWizard } from "@/step-wizard.js";
+    import { Status, Step, StepWizard } from "@/step-wizard.js";
 
     export default {
 
@@ -143,11 +147,12 @@
                             console.log('Step cannot be started', step);
                         }
                         console.log('Step started', step);
-                        step.status = StepStatus.InProgress;
-                        this.stepWizard.startStep(step.id);
+                        step.status = Status.InProgress;
+                        this.stepWizard.startStep(step);
                         this.setView('edit');
                         break;
                     case 'summary':
+                        this.stepWizard.resumeStep(step);
                         this.setView('edit');
                         break;
                 }
@@ -158,6 +163,11 @@
             },
 
             saveAndContinue() {
+                var step = this.stepWizard.currentStep;
+
+                if (step.canBeCompleted) {
+                    step.status = Status.Completed;
+                }
                 // serialize and save
                 if (this.stepWizard.allStepsCompleted) {
                     this.setView('summary');

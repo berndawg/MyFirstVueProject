@@ -1,6 +1,6 @@
 "use strict";
 
-const StepStatus = {
+const Status = {
     CannotStart: "cannotStart",
     NotStarted: "notStarted",
     InProgress: "inProgress",
@@ -13,15 +13,17 @@ class Step {
     constructor(group, text) {
         this.group = group;
         this.text = text;
-        this.status = StepStatus.NotStarted;
+        this.status = Status.NotStarted;
         this.id = Step._id;
         Step._id++;
     }
 
-    // can be overridden
     get canBeStarted() {
-        if (this.status == StepStatus.CannotStart) return false;
-        // todo: if previous steps haven't been completed, can't start
+        if (this.status == Status.CannotStart) return false;
+        return true;
+    }
+
+    get canBeCompleted() {
         return true;
     }
 }
@@ -49,37 +51,29 @@ class StepWizard {
 
     getGroupStatus(group) {
         var groups = this.getGroupSteps(group)
-        if (groups.some(x => x.status == StepStatus.InProgress)) return StepStatus.InProgress;
-        if (groups.every(x => x.status == StepStatus.Completed)) return StepStatus.Completed;
-        return StepStatus.NotStarted;
+        if (groups.some(x => x.status == Status.InProgress)) return Status.InProgress;
+        if (groups.every(x => x.status == Status.Completed)) return Status.Completed;
+        return Status.NotStarted;
     }
 
-    isFirstStep(id) {
-        return id == 0;
+    get allStepsCompleted() {
+        return this.Steps.filter(x=>x.status == Status.Completed).length == this.Steps.length;
     }
 
-    isLastStep(id) {
-        return id == this.Steps.lastIndexOf();
+    completeStep(step) {
+        if (step.status != Status.InProgress) throw new Error('Cannot complete step', step);
+        step.status = Status.Completed;
     }
 
-    allStepsCompleted() {
-        return this.Steps.filter(x=>x.status == StepStatus.Completed).length == this.Steps.length;
+    startStep(step) {
+        if (step.status == Status.CannotStart) throw new Error('Cannot start step', step);
+        this.currentStep = step;
     }
 
-    completeStep(id) {
-        var step = this.getStep(id);
-        
-        if (step.status != StepStatus.InProgress) throw new Error('Cannot complete step, id');
-        step.status = StepStatus.Completed;
-    }
-
-    startStep(id) {
-        var step = this.getStep(id);
-        
-        if (step.status == StepStatus.CannotStart) throw new Error('Cannot start step, id');
-
-        this.currentStepId = id;
+    resumeStep(step) {
+        if (step.status != Status.Completed) throw new Error('Cannot start step, id');
+        this.currentStep = step;
     }
 }
 
-export { StepStatus, Step, StepWizard }
+export { Status, Step, StepWizard }
